@@ -38,7 +38,7 @@ class VisionMain:
 
 
 
-	def stop(self):
+	def arreter(self):
 		self.est_tournant=False
 		self.camera.release()
 		cv2.destroyAllWindows()
