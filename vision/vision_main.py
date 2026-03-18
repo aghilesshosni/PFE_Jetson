@@ -17,3 +17,28 @@ class VisionMain:
 		if not self.camera.open():
 			raise RuntimeError("Echec de Camera")
 		self.est_tournant=True 
+
+	def run(self):
+		#Boucle infinie de traitement d'images
+		if not self.est_tournant:
+			return
+		try:
+			while self.est_tournant:
+				debut_cycle=time.time()
+
+
+
+
+
+
+
+
+
+
+
+
+
+	def stop(self):
+		self.est_tournant=False
+		self.camera.release()
+		cv2.destroyAllWindows()
