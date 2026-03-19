@@ -10,7 +10,7 @@ class VisionMain:
 		self.config= ConfigurateurCamera()
 		self.camera= GestionnaireCamera(camera_id=0)
                 #Preallocation de buffer
-		self.frame_buffer=np.zeros((self.ConfigurateurCamera.height, self.ConfigurateurCamera.width, 3),dtype=np.uint8)
+		self.frame_buffer=np.zeros((self.Config.height, self.Config.width, 3),dtype=np.uint8)
 		self.est_tournant=False
 		self.dernier_resultat={'Autorisation_Remplissage':'False', 'Arret_Convoyeur':False, 'Defaut_Systeme':False, 'Status': 'Init', 'Compensation':0, 'Niveau_Remplissage':0.0}
 	def start(self):
