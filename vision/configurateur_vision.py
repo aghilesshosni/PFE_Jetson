@@ -2,7 +2,7 @@ import os
 import sys
 import yaml
 
-class ConfigurateurCamera:
+class ConfigurateurVision:
 	def __init__(self):
 		dossier_courant=os.path.dirname(os.abspath(__file__))
 		chemin_complet=os.path.join(dossier_courant,"vision_config.yaml")
