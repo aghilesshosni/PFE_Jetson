@@ -25,11 +25,18 @@ class VisionMain:
 		try:
 			while self.est_tournant:
 				debut_cycle=time.time()
+				frame=self.camera.read()
+				if frame is None:
+					continue
+			resultat=DetecteurBouteille.detecter(frame, self.config)
+			if resultat['present']:
+				print("Bouteille existe")
+				print(f"Bouteille est positionée à {resultat['centre']}")
 
-
-
-
-
+		except Exception as e:
+			print (f"Erreur :{e}]")
+		finally:
+			self.arreter()
 
 
 
