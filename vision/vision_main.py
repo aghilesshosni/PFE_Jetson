@@ -28,10 +28,10 @@ class VisionMain:
 				frame=self.camera.read()
 				if frame is None:
 					continue
-			resultat=DetecteurBouteille.detecter(frame, self.config)
-			if resultat['present']:
-				print("Bouteille existe")
-				print(f"Bouteille est positionée à {resultat['centre']}")
+				resultat=DetecteurBouteille.detecter(frame, self.config)
+				if resultat['present']:
+					print("Bouteille existe")
+					print(f"Bouteille est positionée à {resultat['centre']}")
 
 		except Exception as e:
 			print (f"Erreur :{e}]")
