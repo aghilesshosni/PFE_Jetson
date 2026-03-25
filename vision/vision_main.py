@@ -34,7 +34,7 @@ class VisionMain:
 					print(f"Bouteille est positionée à {resultat['centre']}")
 
 		except Exception as e:
-			print (f"Erreur :{e}]")
+			print (f"Erreur :{e}")
 		finally:
 			self.arreter()
 
