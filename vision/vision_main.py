@@ -12,7 +12,7 @@ class VisionMain:
                 #Preallocation de buffer
 		self.frame_buffer=np.zeros((self.Config.height, self.Config.width, 3),dtype=np.uint8)
 		self.est_tournant=False
-		self.dernier_resultat={'Autorisation_Remplissage':'False', 'Arret_Convoyeur':False, 'Defaut_Systeme':False, 'Status': 'Init', 'Compensation':0, 'Niveau_Remplissage':0.0}
+		self.dernier_resultat={'Autorisation_Remplissage':False, 'Arret_Convoyeur':False, 'Defaut_Systeme':False, 'Status': 'Init', 'Compensation':0, 'Niveau_Remplissage':0.0}
 	def start(self):
 		if not self.camera.open():
 			raise RuntimeError("Echec de Camera")
@@ -29,9 +29,50 @@ class VisionMain:
 				if frame is None:
 					continue
 				resultat=DetecteurBouteille.detecter(frame, self.config)
+				self.dernier_resultat['Autorisation_Remplissage'] = False
+		                self.dernier_resultat['Arret_Convoyeur'] = False
+		                self.dernier_resultat['Defaut_Systeme'] = False
+		                self.dernier_resultat['Niveau_Remplissage'] = 0.0
+		                self.dernier_resultat['Status'] = "ATTENTE"
 				if resultat['present']:
 					print("Bouteille existe")
 					print(f"Bouteille est positionée à {resultat['centre']}")
+					resultat_niveau = DetecteurNiveau.verifier(frame,resultat_bouteille['bbox'],self.config)
+
+
+					self.dernier_resultat['Niveau_Remplissage']= resultat_niveau['pourcentage']
+
+					if resultat_niveau['debordement']:
+						
+					        self.dernier_resultat['Autorisation_Remplissage'] = False
+			                        self.dernier_resultat['Arret_Convoyeur'] = True
+			                        self.dernier_resultat['Defaut_Systeme'] = True
+			                        self.dernier_resultat['Niveau_Remplissage'] = 100.0
+			                        self.dernier_resultat['Status'] = "DEBORDEMENT"
+				        elif resultat_niveau['plein']:
+                                                self.dernier_resultat['Autorisation_Remplissage'] = False
+                                                self.dernier_resultat['Arret_Convoyeur'] = False
+                                                self.dernier_resultat['Defaut_Systeme'] = False
+                                                self.dernier_resultat['Niveau_Remplissage'] = 100.0
+                                                self.dernier_resultat['Status'] = "Bouteille Pleine"
+					else:
+    						self.dernier_resultat['Autorisation_Remplissage'] = True
+                                                self.dernier_resultat['Arret_Convoyeur'] = True
+                                                self.dernier_resultat['Defaut_Systeme'] = False
+                                                self.dernier_resultat['Niveau_Remplissage'] = 0.0
+                                                self.dernier_resultat['Status'] = "En Cours de remplissage"
+
+
+
+
+				else:
+					self.dernier_resultat['Status']="Aucune bouteille détectée"
+
+
+
+				if cv2.waitKey(1) & 0xFF ==ord(q):
+					break
+
 
 		except Exception as e:
 			print (f"Erreur :{e}")
