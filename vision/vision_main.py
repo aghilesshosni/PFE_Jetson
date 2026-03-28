@@ -7,10 +7,10 @@ from vision import (GestionnaireCamera, ConfigurateurCamera, AnalyseurPosition, 
 
 class VisionMain:
 	def __init__(self):
-		self.config= ConfigurateurCamera()
-		self.camera= GestionnaireCamera(camera_id=0)
+		self.config= ConfigurateurVision()
+		self.camera= GestionnaireCamera(self.config.id_camera)
                 #Preallocation de buffer
-		self.frame_buffer=np.zeros((self.Config.height, self.Config.width, 3),dtype=np.uint8)
+		self.frame_buffer=np.zeros((self.config.height, self.config.width, 3),dtype=np.uint8)
 		self.est_tournant=False
 		self.dernier_resultat={'Autorisation_Remplissage':False, 'Arret_Convoyeur':False, 'Defaut_Systeme':False, 'Status': 'Init', 'Compensation':0, 'Niveau_Remplissage':0.0}
 	def start(self):
@@ -28,6 +28,16 @@ class VisionMain:
 				frame=self.camera.read()
 				if frame is None:
 					continue
+
+				self.dernier_resultat.update({
+					
+					
+                		        'Autorisation_Remplissage': False,
+                   	        	'Arret_Convoyeur': False,
+                   			'Defaut_Systeme': False,
+                		        'Status': "ATTENTE"
+               			 })
+
 				resultat=DetecteurBouteille.detecter(frame, self.config)
 				self.dernier_resultat['Autorisation_Remplissage'] = False
 		                self.dernier_resultat['Arret_Convoyeur'] = False
@@ -37,7 +47,7 @@ class VisionMain:
 				if resultat['present']:
 					print("Bouteille existe")
 					print(f"Bouteille est positionée à {resultat['centre']}")
-					resultat_niveau = DetecteurNiveau.verifier(frame,resultat_bouteille['bbox'],self.config)
+					resultat_niveau = DetecteurNiveau.verifier(frame,resultat['bbox'],self.config)
 
 
 					self.dernier_resultat['Niveau_Remplissage']= resultat_niveau['pourcentage']
@@ -69,8 +79,8 @@ class VisionMain:
 					self.dernier_resultat['Status']="Aucune bouteille détectée"
 
 
-
-				if cv2.waitKey(1) & 0xFF ==ord(q):
+				cv2.imshow("Ligne de Production ", frame)
+				if cv2.waitKey(1) & 0xFF ==ord('q'):
 					break
 
 
@@ -90,3 +100,21 @@ class VisionMain:
 		self.est_tournant=False
 		self.camera.release()
 		cv2.destroyAllWindows()
+
+
+#TEST du module Vision
+if __name__=="__main__":
+	print("TEST du module Vision")
+	systeme= VisionMain()
+	try:
+		if systeme.start():
+			systeme.run()
+		else:
+			print("Echec de démarrage")
+
+	except KeyboardInterrupt:
+		print ("veuilley appuiyer sur Ctr C")
+	except Exception as e:
+		print(f" Ereur critique: {e}")
+	finally:
+		systeme.arreter()
