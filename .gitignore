@@ -1,0 +1,31 @@
+# Environnements Conda/Mamba
+*.env
+env/
+envs/
+miniconda3/
+miniforge3/
+.conda/
+
+# Fichiers Python compilés
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# IDE et éditeurs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Données lourdes et logs 
+*.log
+data/*.jpg
+data/*.mp4
+*.h5
+*.pth
+*.onnx
+
+# Secrets 
+.env
+secrets.json
