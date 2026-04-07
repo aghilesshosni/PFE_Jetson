@@ -3,14 +3,20 @@ camera:
   width: 640
   height: 480
   fps: 30
+
 detection:
   surface_min_bouteille: 500
   noyau_flou: 5
+
 positionnement:
   buse_x: 320
   tolerence: 20
+
 remplissage:
   seuil_plein_pourcentage: 90
+  ip_adress: "192.168.1.10"
+  port: 4840
+
 plc:
-  ip_adress: "192.168..10"
+  ip_adress: "192.168.1.10"
   port: 4840
