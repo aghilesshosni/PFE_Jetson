@@ -2,12 +2,11 @@ import cv2
 import numpy as np
 
 class DetecteurNiveau:
-    # Detecter le niveau de liquide en analysant le contour du liquide
+
     @staticmethod
     def verifier(frame, bbox_bouteille, config):
         x, y, w, h = bbox_bouteille
         
-        # Correction: OR -> or
         if h <= 0 or w <= 0 or y + h > frame.shape[0] or x + w > frame.shape[1]:
             return {'pourcentage': 0.0, 'plein': False, 'debordement': False}
         
@@ -20,7 +19,6 @@ class DetecteurNiveau:
         # Lissage (Gaussian Blur)
         kernel_size = getattr(config, 'noyau_flou', 7)
         if kernel_size % 2 == 0:
-            # Correction: kernal_size -> kernel_size
             kernel_size = kernel_size + 1
             
         blurred = cv2.GaussianBlur(roi_gris, (kernel_size, kernel_size), 0)
@@ -29,7 +27,6 @@ class DetecteurNiveau:
         (_, mask_liquide) = cv2.threshold(blurred, 30, 255, cv2.THRESH_BINARY_INV)
         
         # Morphologie (Opening)
-        # Correction: MORPH.RECT -> MORPH_RECT
         kernel_morph = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
         mask_open = cv2.morphologyEx(mask_liquide, cv2.MORPH_OPEN, kernel_morph)
         
@@ -44,7 +41,6 @@ class DetecteurNiveau:
         aire_liquide = cv2.contourArea(plus_grand_contour)
         
         if aire_liquide < 100:
-            # Correction: pleine -> plein
             return {'pourcentage': 0.0, 'plein': False, 'debordement': False}
             
         lx, ly, lw, lh = cv2.boundingRect(plus_grand_contour)
@@ -54,7 +50,7 @@ class DetecteurNiveau:
         
         if pourcentage >= seuil_plein:
             est_debordement = True
-            est_plein = True  # Correction: Variable manquante ajoutée
+            est_plein = True  
             
             return {
                 'pourcentage': pourcentage,
