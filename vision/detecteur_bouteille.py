@@ -23,7 +23,11 @@ class DetecteurBouteille:
         contours, _ = cv2.findContours(eroded_edges.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
         if len(contours) == 0:
-            return {'present': False, 'centre': None, 'bbox': None, 'aire': 0}
+            return {
+                'present': False, 
+                'centre': None, 
+                'bbox': None, 
+                'aire': 0}
             
         # Trier par aire
         biggest = sorted(contours, key=cv2.contourArea, reverse=True)[0]
@@ -32,18 +36,23 @@ class DetecteurBouteille:
         aire = cv2.contourArea(biggest)
         
         ratio = float(h) / float(w) if w > 0 else 0
-        hull = cv2.convexHull(biggest)
-        hull_area = cv2.contourArea(hull)
-        solidite = float(aire) / hull_area if hull_area > 0 else 0
 
         # FILTRE 1 : tailles minimale
         if w < 20 or h < 40 or aire < 500: 
             
-            return {'present': False, 'centre': None, 'bbox': None, 'aire': aire}
+            return {
+                'present': False, 
+                'centre': None,
+                'bbox': None,
+                'aire': aire}
 
         # FILTRE 2 : ratio de forme (hauteur / largeur)
         if ratio < 1.5 or ratio > 8.0:
-            return {'present': False, 'centre': None, 'bbox': None, 'aire': aire}
+            return {
+                'present': False,
+                'centre': None, 
+                'bbox': None, 
+                'aire': aire}
 
         centre_x = x + (w // 2)
         centre_y = y + (h // 2)
