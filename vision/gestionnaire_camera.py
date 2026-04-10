@@ -15,11 +15,8 @@ class GestionnaireCamera:
         )
 
     def open(self):
-        if isinstance(self.camera_id, int):
-            self.cap = cv2.VideoCapture(self.gstreamer_pipeline,cv2.CAP_GSTREAMER)
+        self.cap = cv2.VideoCapture(self.gstreamer_pipeline,cv2.CAP_GSTREAMER)
             
-        else:
-            self.cap = cv2.VideoCapture(self.camera_id, cv2.CAP_GSTREAMER)
 
         if not self.cap.isOpened():
             return False
