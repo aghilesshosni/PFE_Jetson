@@ -16,15 +16,15 @@ class GestionnaireCamera:
         )
 
     def open(self):
-        print("Ouverture caméra Jetson...")
+        print("Ouverture camera Jetson...")
 
         self.cap = cv2.VideoCapture(self.gstreamer_pipeline, cv2.CAP_GSTREAMER)
 
         if not self.cap.isOpened():
-            print("Erreur: caméra non ouverte")
+            print("Erreur: camera non ouverte")
             return False
 
-        print("Caméra OK")
+        print("Camera OK")
         return True
 
     def read(self):

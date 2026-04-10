@@ -49,7 +49,6 @@ class VisionMain:
                     time.sleep(0.01)
                     continue
 
-                # 🔥 OPTIMISATION Jetson (réduction CPU)
                 frame = cv2.resize(frame, (self.config.largeur, self.config.hauteur))
 
                 self.dernier_resultat.update({
@@ -103,7 +102,7 @@ class VisionMain:
 
                 else:
                     if self.dernier_etat_affiche != "AUCUNE_BOUTEILLE":
-                        print("Aucune bouteille détectée")
+                        print("Aucune bouteille detectee")
                         self.dernier_etat_affiche = "AUCUNE_BOUTEILLE"
 
                 # 🟢 AFFICHAGE
@@ -144,7 +143,7 @@ class VisionMain:
         cv2.destroyAllWindows()
 
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     print("TEST Vision System Jetson")
     systeme = VisionMain()
 
