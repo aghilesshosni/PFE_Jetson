@@ -114,3 +114,4 @@ General configuration for OpenCV 4.13.0 =====================================
   Install to:                    /io/_skbuild/linux-aarch64-3.9/cmake-install
 -----------------------------------------------------------------
 
+sudo apt-get install python3-opencv libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-libav -y
