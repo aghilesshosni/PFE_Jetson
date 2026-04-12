@@ -29,7 +29,7 @@ class VisionMain:
 
     def start(self):
         if not self.camera.open():
-            raise RuntimeError("Échec ouverture caméra")
+            raise RuntimeError("Echec ouverture camera")
         self.est_tournant = True
         return True
 
@@ -105,7 +105,6 @@ class VisionMain:
                         print("Aucune bouteille detectee")
                         self.dernier_etat_affiche = "AUCUNE_BOUTEILLE"
 
-                # 🟢 AFFICHAGE
                 if resultat['present']:
                     x, y, w, h = resultat['bbox']
                     cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
@@ -124,7 +123,6 @@ class VisionMain:
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
 
-                # 🔥 contrôle CPU Jetson
                 temps_cycle = time.time() - debut_cycle
                 if temps_cycle < 0.03:
                     time.sleep(0.03 - temps_cycle)
@@ -151,6 +149,6 @@ if __name__ == "__main__":
         if systeme.start():
             systeme.run()
     except KeyboardInterrupt:
-        print("Arrêt Ctrl+C")
+        print("Arret Ctrl+C")
     finally:
         systeme.arreter()
