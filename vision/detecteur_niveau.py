@@ -7,13 +7,14 @@ class DetecteurNiveau:
     def verifier(frame, bbox_bouteille, config):
         x, y, w, h = bbox_bouteille
         
+        # Verification des limites de l'image
         if h <= 0 or w <= 0 or y + h > frame.shape[0] or x + w > frame.shape[1]:
             return {'pourcentage': 0.0, 'plein': False, 'debordement': False}
         
-        # Decoupage Region Of Interest
+        # Decoupage Region Of Interest (ROI)
         roi = frame[y:y+h, x:x+w]
         
-        # Conversion en gris
+        # Conversion en niveaux de gris
         roi_gris = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
         
         # Lissage (Gaussian Blur)
@@ -23,10 +24,10 @@ class DetecteurNiveau:
             
         blurred = cv2.GaussianBlur(roi_gris, (kernel_size, kernel_size), 0)
         
-        # Seuillage (Thresholding)
+        # Seuillage (Thresholding) - Inverse binary pour isoler le liquide sombre
         (_, mask_liquide) = cv2.threshold(blurred, 30, 255, cv2.THRESH_BINARY_INV)
         
-        # Morphologie (Opening)
+        # Morphologie (Opening) pour retirer le bruit
         kernel_morph = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
         mask_open = cv2.morphologyEx(mask_liquide, cv2.MORPH_OPEN, kernel_morph)
         
@@ -36,18 +37,22 @@ class DetecteurNiveau:
         if not contours:
             return {'pourcentage': 0.0, 'plein': False, 'debordement': False}
         
-        # Trier par aire
+        # Trier par aire pour trouver le plus grand contour (le liquide)
         plus_grand_contour = max(contours, key=cv2.contourArea)
         aire_liquide = cv2.contourArea(plus_grand_contour)
         
+        # Filtre de bruit minimal
         if aire_liquide < 100:
             return {'pourcentage': 0.0, 'plein': False, 'debordement': False}
             
+        # Calcul de la hauteur du liquide
         lx, ly, lw, lh = cv2.boundingRect(plus_grand_contour)
         pourcentage = (lh / float(h)) * 100.0
         
+        # Recuperation du seuil de plein
         seuil_plein = getattr(config, 'seuil_plein', 95.0)
         
+        # Determination de l'etat
         if pourcentage >= seuil_plein:
             est_debordement = True
             est_plein = True  
@@ -67,3 +72,4 @@ class DetecteurNiveau:
             'hauteur_liquide_px': lh,
             'hauteur_bouteille': h
         }
+

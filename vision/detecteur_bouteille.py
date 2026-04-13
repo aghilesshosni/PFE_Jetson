@@ -10,11 +10,11 @@ class DetecteurBouteille:
         #  Lissage (Gaussian Blur) 
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
         
-        #  DÉTECTION DE CONTOURS (CANNY)
+        #  DETECTION DE CONTOURS (CANNY)
         edges = cv2.Canny(blurred, 30, 100)
         
         #  Morphologie 
-        # relier les pointillés des bords de la bouteille en un seul contour fermé
+        # relier les pointilles des bords de la bouteille en un seul contour ferme
         kernel = np.ones((3,3), np.uint8)
         dilated_edges = cv2.dilate(edges, kernel, iterations=3) 
         eroded_edges = cv2.erode(dilated_edges, kernel, iterations=2) 

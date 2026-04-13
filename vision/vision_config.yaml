@@ -5,7 +5,7 @@ camera:
   fps: 30
 
 detection:
-  surface_min_bouteille: 500
+  surface_min_bouteille: 1800
   noyau_flou: 5
 
 positionnement:

@@ -12,7 +12,7 @@ class ConfigurateurVision:
             sys.exit(1)
             
         try:
-            with open(chemin_complet, 'r', encoding='utf-8') as f:
+            with open(chemin_complet, 'r') as f:
                 donnees = yaml.safe_load(f)
                 if not donnees:
                     raise ValueError("Le fichier YAML est vide")
@@ -30,11 +30,10 @@ class ConfigurateurVision:
             self.seuil_plein = rempl['seuil_plein_pourcentage']
             
             plc = donnees['plc']
-            # Attention: Le YAML a une faute de frappe 'ip_adress' et une IP invalide '..'
-            self.plc_ip = rempl['ip_adress'] 
-            self.port = rempl['port']
+            self.plc_ip = plc.get('ip_adress', plc.get('ip', '0.0.0.0')) 
+            self.port = plc.get('port', 502)
             
         except Exception as e:
-            erreur_message = f"Erreur Inconnue :{e}"
+            erreur_message = "Erreur Inconnue : {}".format(e)
             print(erreur_message)
             sys.exit(1)
