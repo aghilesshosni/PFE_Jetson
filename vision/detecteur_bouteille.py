@@ -4,55 +4,48 @@ import numpy as np
 class DetecteurBouteille:
     @staticmethod
     def detecter(frame, config):
-        #  Conversion en niveaux de gris
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        enhanced_gray = clahe.apply(gray)
         
-        #  Lissage (Gaussian Blur) 
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+        blurred = cv2.GaussianBlur(enhanced_gray, (5, 5), 0)
         
-        #  DETECTION DE CONTOURS (CANNY)
-        edges = cv2.Canny(blurred, 30, 100)
+        edges = cv2.Canny(blurred, 30, 70)
         
-        #  Morphologie 
-        # relier les pointilles des bords de la bouteille en un seul contour ferme
-        kernel = np.ones((3,3), np.uint8)
-        dilated_edges = cv2.dilate(edges, kernel, iterations=3) 
-        eroded_edges = cv2.erode(dilated_edges, kernel, iterations=2) 
+        kernel = np.ones((5,5), np.uint8) 
         
-        # trouver les contours
+        dilated_edges = cv2.dilate(edges, kernel, iterations=2)
+        eroded_edges = cv2.erode(dilated_edges, kernel, iterations=1)
+        
         contours, _ = cv2.findContours(eroded_edges.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
         if len(contours) == 0:
-            return {
-                'present': False, 
-                'centre': None, 
-                'bbox': None, 
-                'aire': 0}
-            
-        # Trier par aire
-        biggest = sorted(contours, key=cv2.contourArea, reverse=True)[0]
+            return {'present': False, 'centre': None, 'bbox': None, 'aire': 0}
         
-        x, y, w, h = cv2.boundingRect(biggest)
-        aire = cv2.contourArea(biggest)
+        candidates = []
         
-        ratio = float(h) / float(w) if w > 0 else 0
-
-        # FILTRE 1 : tailles minimale
-        if w < 20 or h < 40 or aire < 500: 
+        for cnt in contours:
+            aire = cv2.contourArea(cnt)
+            x, y, w, h = cv2.boundingRect(cnt)
             
-            return {
-                'present': False, 
-                'centre': None,
-                'bbox': None,
-                'aire': aire}
-
-        # FILTRE 2 : ratio de forme (hauteur / largeur)
-        if ratio < 1.5 or ratio > 8.0:
-            return {
-                'present': False,
-                'centre': None, 
-                'bbox': None, 
-                'aire': aire}
+            if aire < 1000 or w < 20 or h < 40:
+                continue
+                
+            ratio = float(h) / float(w) if w > 0 else 0
+            
+            if 2 <= ratio <= 4.0:
+                candidates.append((cnt, aire, x, y, w, h, ratio))
+        
+        if not candidates:
+            return {'present': False, 'centre': None, 'bbox': None, 'aire': 0}
+            
+        candidates.sort(key=lambda k: k[1], reverse=True)
+        best_candidate = candidates[0]
+        
+        biggest = best_candidate[0]
+        aire = best_candidate[1]
+        x, y, w, h = best_candidate[2], best_candidate[3], best_candidate[4], best_candidate[5]
+        ratio = best_candidate[6]
 
         centre_x = x + (w // 2)
         centre_y = y + (h // 2)
