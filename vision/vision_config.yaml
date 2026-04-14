@@ -16,7 +16,7 @@ remplissage:
   seuil_plein_pourcentage: 90
   ip_adress: "192.168.1.10"
   port: 4840
-
+  seuil_liquide: 40
 plc:
   ip_adress: "192.168.1.10"
   port: 4840
