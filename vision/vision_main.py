@@ -158,16 +158,3 @@ class VisionMain:
         self.camera.release()
         cv2.destroyAllWindows()
 
-if __name__ == "__main__":
-    print("TEST Vision System Jetson")
-    systeme = VisionMain()
-
-    try:
-        if systeme.start():
-            systeme.run()
-    except KeyboardInterrupt:
-        print(" Arret manuel (Ctrl+C)")
-    except Exception as e:
-        print("Erreur fatale au demarrage : {}".format(e))
-    finally:
-        systeme.arreter()
