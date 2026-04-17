@@ -9,7 +9,7 @@ sys.path.insert(0, parent_dir)
 
 from vision.vision_main import VisionMain
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', handlers=[logging.StreamHnadler(sys.stdout), logging.FileHandler('/home/aghiless/PFE/PFE_Jetson/logs/PFE_Jetson.log')])
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', handlers=[logging.StreamHnadler(sys.stdout), logging.FileHandler('/PFE_Jetson/logs/PFE_Jetson.log')])
 logger = logging.getLogger("PFE_Jetson_Main")
 
 class ApplicationMaster:
