@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
 import cv2
 import time
-from gestionnaire_camera import GestionnaireCamera
-from configurateur_vision import ConfigurateurVision
-from detecteur_bouteille import DetecteurBouteille
-from detecteur_niveau import DetecteurNiveau
+# Use relative imports for modules in the same package
+from .gestionnaire_camera import GestionnaireCamera
+from .configurateur_vision import ConfigurateurVision
+from .detecteur_bouteille import DetecteurBouteille
+from .detecteur_niveau import DetecteurNiveau
 
 class VisionMain:
     def __init__(self):
@@ -34,6 +36,7 @@ class VisionMain:
                     time.sleep(0.01)
                     continue
 
+                # Resize if necessary based on config
                 if frame.shape[1] != self.config.largeur or frame.shape[0] != self.config.hauteur:
                     frame = cv2.resize(frame, (self.config.largeur, self.config.hauteur))
 
@@ -79,10 +82,11 @@ class VisionMain:
                     if rh > 0:
                         cv2.rectangle(frame, (rx, ry), (rx + rw, ry + rh), (0, 0, 255), -1)
 
+                # Only show if display is available (handled inside imshow usually, but good to be safe)
                 cv2.imshow("Ligne de Production", frame)
                 if cv2.waitKey(1) & 0xFF == ord('q'): break
 
-                # Contrôle FPS
+                # Contrôle FPS (~30 FPS target)
                 dt = time.time() - debut_cycle
                 if dt < 0.033: time.sleep(0.033 - dt)
 
@@ -95,8 +99,3 @@ class VisionMain:
         self.est_tournant = False
         self.camera.release()
         cv2.destroyAllWindows()
-
-if __name__ == "__main__":
-    app = VisionMain()
-    app.start()
-    app.run()

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import cv2
+import os
 
 class GestionnaireCamera:
     def __init__(self, camera_id=0):
         self.camera_id = camera_id
         self.cap = None
 
-        # Parametres JetsonHacks
         self.capture_width = 1920
         self.capture_height = 1080
         self.display_width = 1280   
@@ -35,9 +35,7 @@ class GestionnaireCamera:
 
     def open(self):
         print("Initialisation camera (Methode Directe JetsonHacks)...")
-
         pipeline_str = self.gstreamer_pipeline()
-
         self.cap = cv2.VideoCapture(pipeline_str, cv2.CAP_GSTREAMER)
 
         if not self.cap.isOpened():
@@ -51,12 +49,11 @@ class GestionnaireCamera:
             ret, frame = self.cap.read()
             if ret and frame is not None:
                 h, w = frame.shape[:2]
-                # CORRECTION PYTHON 2.7 : Remplacement de f-string par .format()
                 print("SUCCES : Flux actif ! Resolution recue : {}x{}".format(w, h))
                 return True
             cv2.waitKey(10) 
 
-        print("Attention : Camera ouverte mais aucune image recue apres 3s.")
+        print("Attention : Camera ouverte mais aucune image valide recue apres warmup.")
         return True
 
     def read(self):
@@ -64,14 +61,16 @@ class GestionnaireCamera:
             return None
 
         ret, frame = self.cap.read()
-        if not ret:
+        if not ret or frame is None:
             ret, frame = self.cap.read()
-            if not ret:
+            if not ret or frame is None:
                 return None
+        
         return frame
 
     def release(self):
         if self.cap:
             self.cap.release()
             self.cap = None
+        cv2.destroyAllWindows()
         print("Camera relachee.")

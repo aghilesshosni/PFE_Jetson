@@ -1,25 +1,50 @@
+# -*- coding: utf-8 -*-
 import sys
 import os
 import time
 import logging
 
-current_dir=os.path.dirname(os.path.abspath(__file__))
-parent_dir=os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir)
+# --- PATH FIX START ---
+# Get the directory where this file (main.py) is located: ~/PFE_Jetson/src/
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Get the parent directory: ~/PFE_Jetson/
+parent_dir = os.path.dirname(current_dir)
+
+# Add the parent directory to the system path. 
+# This allows Python to find the 'vision' folder located in the root.
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+# --- PATH FIX END ---
 
 from vision.vision_main import VisionMain
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', handlers=[logging.StreamHnadler(sys.stdout), logging.FileHandler('/PFE_Jetson/logs/PFE_Jetson.log')])
+# Setup Logging
+# We create the logs folder in the Project Root (parent_dir), not inside src/
+log_dir = os.path.join(parent_dir, "logs")
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
+log_file = os.path.join(log_dir, "PFE_Jetson.log")
+
+logging.basicConfig(
+    level=logging.INFO, 
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', 
+    handlers=[
+        logging.StreamHandler(sys.stdout), 
+        logging.FileHandler(log_file)
+    ]
+)
 logger = logging.getLogger("PFE_Jetson_Main")
 
 class ApplicationMaster:
     def __init__(self):
-        logger.info("Inititalisation ....")
+        logger.info("Initialisation ....")
         try:
-            self.vision_system= VisionMain()
+            self.vision_system = VisionMain()
             logger.info("Sous Systemes de vision charges avec Succes")
         except Exception as e:
-            logger.error("Echec critique lors de chargement des modules : {}'.format(e))
+            logger.error("Echec critique lors de chargement des modules : {}".format(e))
             raise
 
     def run(self):
@@ -28,8 +53,10 @@ class ApplicationMaster:
             if not self.vision_system.start():
                 logger.error("Impossible de demarrer le systeme de vision")
                 return
-            while True:
-                self.vision_system.run()
+            
+            # Run the vision loop
+            self.vision_system.run()
+            
         except KeyboardInterrupt:
             logger.info("Interruption Manuelle")
         except Exception as e:
@@ -39,10 +66,9 @@ class ApplicationMaster:
 
     def stop(self):
         logger.info("Arret de systeme de vision")
-        self.vision_systeme.arreter()
-
+        self.vision_system.arreter()
         logger.info("Systeme arrete")
 
-if __name__=="__main__":
-    app=ApplicationMaster()
+if __name__ == "__main__":
+    app = ApplicationMaster()
     app.run()

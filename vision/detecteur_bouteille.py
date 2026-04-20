@@ -1,12 +1,14 @@
+# -*- coding: utf-8 -*-
 import cv2
 import numpy as np
+import time
 
 class DetecteurBouteille:
     def __init__(self):
-        self.derniere_detection_valide= None
-        self.temps_perte_detection= None
-        self.seuil_temps_perte= 2.0
-        self.seuil_deplacement_px=10
+        self.derniere_detection_valide = None
+        self.temps_perte_detection = None
+        self.seuil_temps_perte = 2.0
+        self.seuil_deplacement_px = 10
         self.dernier_centre_stable = None 
 
     def detecter(self, frame, config):
@@ -15,22 +17,18 @@ class DetecteurBouteille:
         enhanced_gray = clahe.apply(gray)
         
         blurred = cv2.GaussianBlur(enhanced_gray, (5, 5), 0)
-        
         edges = cv2.Canny(blurred, 30, 70)
         
         kernel = np.ones((5,5), np.uint8) 
-        
         dilated_edges = cv2.dilate(edges, kernel, iterations=2)
         eroded_edges = cv2.erode(dilated_edges, kernel, iterations=1)
         
         contours, _ = cv2.findContours(eroded_edges.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
         if len(contours) == 0:
-            detection_brute= {'present': False, 'centre':None, 'bbox': None, 'aire': 0}
+            detection_brute = {'present': False, 'centre': None, 'bbox': None, 'aire': 0}
         else:
-
             candidates = []
-        
             for cnt in contours:
                 aire = cv2.contourArea(cnt)
                 x, y, w, h = cv2.boundingRect(cnt)
@@ -44,17 +42,22 @@ class DetecteurBouteille:
                     candidates.append((cnt, aire, x, y, w, h, ratio))
         
             if not candidates:
-                detection_brute= {'present': False, 'centre': None, 'bbox': None, 'aire': 0}
+                detection_brute = {'present': False, 'centre': None, 'bbox': None, 'aire': 0}
             else:
-
                 candidates.sort(key=lambda k: k[1], reverse=True)
                 best = candidates[0]
         
-                aire = best_candidate[1]
+                # Fixed variable name error here
+                aire = best[1]
                 x, y, w, h = best[2], best[3], best[4], best[5]
-                detection_brute= { 'present': True, 'centre':(x +w//2, y+ h//2), 'bbox':(x, y, w, h), 'aire': best[1] }
+                detection_brute = { 
+                    'present': True, 
+                    'centre': (x + w//2, y + h//2), 
+                    'bbox': (x, y, w, h), 
+                    'aire': best[1] 
+                }
 
-        temps_actuel=time.time()
+        temps_actuel = time.time()
 
         if detection_brute['present']:
             # --- A. Gestion de la présence (Debouncing 2s) ---
@@ -68,11 +71,9 @@ class DetecteurBouteille:
                 self.dernier_centre_stable = centre_actuel
                 centre_a_renvoyer = centre_actuel
             else:
-                # Calcul de la distance de déplacement
                 dx = abs(centre_actuel[0] - self.dernier_centre_stable[0])
                 dy = abs(centre_actuel[1] - self.dernier_centre_stable[1])
                 
-                # Si le mouvement est inférieur au seuil (10px), on ignore le changement
                 if dx < self.seuil_deplacement_px and dy < self.seuil_deplacement_px:
                     centre_a_renvoyer = self.dernier_centre_stable
                 else:
@@ -91,7 +92,6 @@ class DetecteurBouteille:
             if self.temps_perte_detection is None:
                 self.temps_perte_detection = temps_actuel
             
-            # Si perdu depuis moins de 2s, on maintient l'état "Présent" avec les dernières valeurs connues
             if (temps_actuel - self.temps_perte_detection) < self.seuil_temps_perte:
                 if self.derniere_detection_valide:
                     return {
@@ -101,10 +101,8 @@ class DetecteurBouteille:
                         'aire': self.derniere_detection_valide['aire']
                     }
             
-            # Sinon, vraiment perdue 
             self.derniere_detection_valide = None
             return {'present': False, 'centre': None, 'bbox': None, 'aire': 0}
-
 
 
 
