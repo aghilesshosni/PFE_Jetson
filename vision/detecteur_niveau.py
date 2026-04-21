@@ -5,41 +5,27 @@ import numpy as np
 class DetecteurNiveau:
     def __init__(self):
         self.dernier_niveau_stable = -1.0
-        self.seuil_variation_pct = 1.5  
+        self.seuil_variation_pct = 1.5  # Changement min de 1.5% pour mettre à jour
 
     def verifier(self, frame, bbox_bouteille, config):
-        if not bbox_bouteille:
-            return {'pourcentage': 0.0, 'plein': False, 'debordement': False}
-
         x, y, w, h = bbox_bouteille
         
         if h <= 0 or w <= 0:
             return {'pourcentage': 0.0, 'plein': False, 'debordement': False}
         
+        # 1. TRAITEMENT D'IMAGE (Méthode Agmanic pour liquide coloré/sombre)
         margin_x = int(w * 0.15)
         margin_y = int(h * 0.05)
-        
-        # Ensure coordinates are within frame bounds
-        h_frame, w_frame = frame.shape[:2]
-        x1 = max(0, x + margin_x)
-        x2 = min(w_frame, x + w - margin_x)
-        y1 = max(0, y + margin_y)
-        y2 = min(h_frame, y + h - margin_y)
-
-        roi = frame[y1:y2, x1:x2]
+        roi = frame[y+margin_y:y+h-margin_y, x+margin_x:x+w-margin_x]
         
         if roi.size == 0:
             return self._get_result_stable(0.0)
 
         roi_gris = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-        
-        # Use config values safely
         kernel_size = getattr(config, 'noyau_flou', 7)
         if kernel_size % 2 == 0: kernel_size += 1
         
         blurred = cv2.GaussianBlur(roi_gris, (kernel_size, kernel_size), 0)
-        
-        # Default threshold if not in config
         threshold_val = getattr(config, 'seuil_liquide', 40)
         (_, mask_liquide) = cv2.threshold(blurred, threshold_val, 255, cv2.THRESH_BINARY_INV)
         
@@ -61,23 +47,26 @@ class DetecteurNiveau:
         plus_grand_contour = max(valid_contours, key=cv2.contourArea)
         lx, ly, lw, lh = cv2.boundingRect(plus_grand_contour)
         
+        # Calcul brut
         hauteur_roi = roi.shape[0]
-        if hauteur_roi == 0:
-            return self._get_result_stable(0.0)
-
         pourcentage_brut = (lh / float(hauteur_roi)) * 100.0
         pourcentage_brut = max(0.0, min(100.0, pourcentage_brut))
 
         return self._get_result_stable(pourcentage_brut)
 
     def _get_result_stable(self, pourcentage_brut):
+        """Applique l'hystérésis avant de retourner la valeur"""
         if self.dernier_niveau_stable < 0:
+            # Première initialisation
             self.dernier_niveau_stable = pourcentage_brut
         else:
+            # Vérifier si la variation est significative
             if abs(pourcentage_brut - self.dernier_niveau_stable) > self.seuil_variation_pct:
                 self.dernier_niveau_stable = pourcentage_brut
+            # Sinon, on garde l'ancienne valeur (self.dernier_niveau_stable)
 
-        seuil_plein = 95.0 
+        # Détermination des états basée sur la valeur STABLE
+        seuil_plein = 95.0 # Valeur par défaut, pourrait venir de config
         est_plein = self.dernier_niveau_stable >= seuil_plein
         est_debordement = est_plein and (self.dernier_niveau_stable >= 98.0)
 
@@ -85,5 +74,5 @@ class DetecteurNiveau:
             'pourcentage': self.dernier_niveau_stable,
             'plein': est_plein,
             'debordement': est_debordement,
-            'hauteur_liquide_px': int(self.dernier_niveau_stable * 0.01 * 100) 
+            'hauteur_liquide_px': int(self.dernier_niveau_stable * 0.01 * 100) # Approx
         }
