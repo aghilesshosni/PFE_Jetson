@@ -4,23 +4,15 @@ import os
 import time
 import logging
 
-# --- PATH FIX START ---
-# Get the directory where this file (main.py) is located: ~/PFE_Jetson/src/
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Get the parent directory: ~/PFE_Jetson/
 parent_dir = os.path.dirname(current_dir)
 
-# Add the parent directory to the system path. 
-# This allows Python to find the 'vision' folder located in the root.
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
-# --- PATH FIX END ---
 
 from vision.vision_main import VisionMain
 
-# Setup Logging
-# We create the logs folder in the Project Root (parent_dir), not inside src/
 log_dir = os.path.join(parent_dir, "logs")
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
@@ -54,7 +46,6 @@ class ApplicationMaster:
                 logger.error("Impossible de demarrer le systeme de vision")
                 return
             
-            # Run the vision loop
             self.vision_system.run()
             
         except KeyboardInterrupt:
