@@ -46,6 +46,10 @@ class VisionMain:
                 cv2.rectangle(frame, (self.crop_x_start, 0), (self.crop_x_end, frame.shape[0]), (255, 0, 255), 1)
 
                 res_bouteille = self.detecteur_bouteille.detecter(frame_cropped, self.config)
+
+                MIN_CONFIDENT_AREA = getattr(self.config, 'surface_min_bouteille', 20000)
+                if res_bouteille['present'] and res_bouteille['aire'] < MIN_CONFIDENT_AREA:
+                    res_bouteille = {'present': False, 'centre': None, 'bbox': None, 'aire': 0}                
                 
                 if res_bouteille['present'] and res_bouteille['centre']:
                     old_cx, old_cy = res_bouteille['centre']
@@ -69,12 +73,13 @@ class VisionMain:
                 else:
                     status = "EN_REMPLISSAGE"
 
-                log_msg = "{} | Centre: {} | Niveau: {:.1f}%".format(
+                log_msg = "{} | Centre: {} | Niveau: {:.1f}% | BBox: {} | Aire: {}".format(
                     status, 
-                    res_bouteille['centre'] if res_bouteille['centre'] else "N/A", 
-                    res_niveau['pourcentage']
-                )
-                
+                    res_bouteille['centre'] if res_bouteille['centre'] else "N/A",
+                    res_niveau['pourcentage'],
+                    res_bouteille['bbox'] if res_bouteille['bbox'] else "N/A",
+                    int(res_bouteille['aire'])
+                )                
                 if log_msg != self.dernier_log_hash:
                     print(log_msg)
                     self.dernier_log_hash = log_msg

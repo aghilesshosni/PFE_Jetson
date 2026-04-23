@@ -1,17 +1,33 @@
 camera:
   id: 0
-  width: 640      
-  height: 480     
+  width: 640
+  height: 480
   fps: 30
 
-detection:
-  surface_min_bouteille: 5000 
+calibration:
+  enabled: false  
   
+  area_min: 20000
+  area_max: 30000
+
+  width_min: 90
+  width_max: 150
+  height_min: 400
+  height_max: 500
+
+  center_x_min: 280
+  center_x_max: 380
+  
+  top_edge_y_max: 80 
+
+detection:
+  surface_min_bouteille: 20000 
   noyau_flou: 5
+  seuil_liquide: 40
 
 positionnement:
   buse_x: 640     
-  tolerence: 40   # Double the tolerance since pixels are smaller
+  tolerence: 40  
 
 remplissage:
   seuil_plein_pourcentage: 90
