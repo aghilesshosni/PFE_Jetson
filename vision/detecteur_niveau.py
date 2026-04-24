@@ -38,7 +38,7 @@ class DetecteurNiveau:
         if not contours:
             return {'pourcentage': 0.0, 'plein': False, 'debordement': False}
         
-        min_area = (w * h) * 0.05  
+        min_area = (w * h) * 0.01  
         valid_contours = [c for c in contours if cv2.contourArea(c) > min_area]
         
         if not valid_contours:
