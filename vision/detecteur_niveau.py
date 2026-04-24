@@ -26,8 +26,8 @@ class DetecteurNiveau:
         blurred = cv2.GaussianBlur(roi_gris, (kernel_size, kernel_size), 0)
         
         threshold_val = getattr(config, 'seuil_liquide', 40) 
-        (_, mask_liquide) = cv2.threshold(blurred, threshold_val, 255, cv2.THRESH_BINARY_INV)
-        
+
+        (_, mask_liquide) = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)        
         kernel_morph = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
         mask_open = cv2.morphologyEx(mask_liquide, cv2.MORPH_OPEN, kernel_morph)
         

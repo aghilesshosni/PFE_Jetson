@@ -15,8 +15,8 @@ calibration:
   height_min: 400
   height_max: 500
 
-  center_x_min: 280
-  center_x_max: 380
+  center_x_min: 30
+  center_x_max: 130
   
   top_edge_y_max: 80 
 

@@ -28,7 +28,7 @@ class ConfigurateurVision:
             self.hauteur = cam['height']
             
             det = donnees['detection']
-            self.surface_min = det.get('surface_min_bouteille', 1000)
+            self.surface_min_bouteille = det.get('surface_min_bouteille', 20000)
             self.noyau_flou = det.get('noyau_flou', 5)
             
             rempl = donnees.get('remplissage', {})
