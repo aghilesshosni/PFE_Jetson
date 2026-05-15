@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supervision Ligne de Remplissage</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-color: #e0e0e0;
+            --accent-green: #00ff88;
+            --accent-red: #ff4d4d;
+            --accent-blue: #00ccff;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 { margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        /* Video Section */
+        .video-container {
+            position: relative;
+            width: 100%;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #444;
+        }
+        img.video-feed {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Stats Section */
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+        }
+        .stat-label { font-size: 0.9em; color: #aaa; }
+        .stat-value { font-size: 1.5em; font-weight: bold; }
+        
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            background-color: #444;
+            border-radius: 10px;
+            height: 30px;
+            margin-top: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+            width: 0%;
+            transition: width 0.2s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: #000;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        /* Status Badges */
+        .badge { padding: 5px 10px; border-radius: 4px; font-size: 0.8em; font-weight: bold; }
+        .badge-ok { background-color: var(--accent-green); color: #000; }
+        .badge-warn { background-color: #ffcc00; color: #000; }
+        .badge-err { background-color: var(--accent-red); color: #fff; }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .info-item {
+            background: #383838;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .info-item span { display: block; font-size: 0.8em; color: #aaa; }
+        .info-item strong { font-size: 1.2em; }
+
+        @media (max-width: 768px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Supervision Temps Réel</h1>
+
+    <div class="dashboard-grid">
+        <div class="card">
+            <h2>Flux Vidéo</h2>
+            <div class="video-container">
+                <img src="{{ url_for('video_feed') }}" class="video-feed" alt="Flux caméra">
+            </div>
+            <div style="margin-top: 15px;">
+                <div class="stat-label">Niveau de Remplissage</div>
+                <div class="progress-container">
+                    <div id="progress-bar" class="progress-bar">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Métriques Système</h2>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <span>Bouteille Détectée</span>
+                    <strong id="bottle-status">NON</strong>
+                </div>
+                <div class="info-item">
+                    <span>FPS (Traitement)</span>
+                    <strong id="fps-status">0</strong>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; font-size: 0.8em; color: #777; text-align: center;">
+                Plateforme: OKdo Nano C100<br>
+                Protocole: OPC UA ↔ Siemens S7-1200
+            </div>
+        </div>
+    </div>
+
+    <script>
+        setInterval(async () => {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+
+                document.getElementById('bottle-status').innerText = data.present ? "OUI" : "NON";
+                document.getElementById('fps-status').innerText = data.fps.toFixed(1);
+
+                const bottleEl = document.getElementById('bottle-status');
+                if(data.present) {
+                    bottleEl.style.color = "var(--accent-green)";
+                } else {
+                    bottleEl.style.color = "#aaa";
+                }
+
+                const progressBar = document.getElementById('progress-bar');
+                progressBar.style.width = data.level + '%';
+                progressBar.innerText = data.level.toFixed(1) + '%';
+                
+                if(data.level >= 95) {
+                    progressBar.style.background = "var(--accent-red)";
+                } else {
+                    progressBar.style.background = "linear-gradient(90deg, var(--accent-blue), var(--accent-green))";
+                }
+
+            } catch (error) {
+                console.error("Erreur de récupération des données:", error);
+            }
+        }, 500);
+    </script>
+</body>
+</html>

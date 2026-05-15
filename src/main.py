@@ -3,6 +3,7 @@ import sys
 import os
 import time
 import logging
+from web_dashboard.app import start_dashboard_thread
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -41,6 +42,11 @@ class ApplicationMaster:
 
     def run(self):
         logger.info("Demarrage de la Boucle Principale...")
+        logger.info("Démarrage du serveur web en arriere plan...")
+        start_dashboard_thread()
+
+
+
         try:
             if not self.vision_system.start():
                 logger.error("Impossible de demarrer le systeme de vision")
