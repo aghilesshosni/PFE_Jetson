@@ -105,13 +105,12 @@ class VisionMain:
                         cv2.rectangle(frame, (rx, ry), (rx + rw, ry + rh), (0, 0, 255), -1)
                 dt=time.time() - debut_cycle
                 current_fps= 1.0/dt if dt >0 else 0.0
-                valve_open=(staus== "EN_REMPLISSAGE")
-                state.update(present=res_bouteille['present'], level=res_niveau['pourcentage'],frame= frame, fps=fps )
+                valve_open=(status== "EN_REMPLISSAGE")
+                state.update(present=res_bouteille['present'], level=res_niveau['pourcentage'],frame= frame, fps=current_fps )
 
                 cv2.imshow("Ligne de Production", frame)
                 if cv2.waitKey(1) & 0xFF == ord('q'): break
 
-                dt = time.time() - debut_cycle
                 if dt < 0.033: time.sleep(0.033 - dt)
 
         except Exception as e:
