@@ -1,17 +1,10 @@
 # -*- coding: utf-8 -*-
-import sys
-import os
-import time
 import cv2
+import time
 from .gestionnaire_camera import GestionnaireCamera
 from .configurateur_vision import ConfigurateurVision
 from .detecteur_bouteille import DetecteurBouteille
 from .detecteur_niveau import DetecteurNiveau
-from shared_state import state
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(os.path.dirname(current_dir))
-sys.path.append(project_root)
 
 class VisionMain:
     def __init__(self):
@@ -95,6 +88,7 @@ class VisionMain:
                     x, y, w, h = res_bouteille['bbox']
                     
                     cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                    cv2.putText(frame, status, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
                     
                     niveau_pct = res_niveau['pourcentage'] / 100.0
                     liq_h = int(h * niveau_pct)
@@ -103,14 +97,11 @@ class VisionMain:
                     
                     if rh > 0:
                         cv2.rectangle(frame, (rx, ry), (rx + rw, ry + rh), (0, 0, 255), -1)
-                dt=time.time() - debut_cycle
-                current_fps= 1.0/dt if dt >0 else 0.0
-                valve_open=(status== "EN_REMPLISSAGE")
-                state.update(present=res_bouteille['present'], level=res_niveau['pourcentage'],frame= frame, fps=current_fps )
 
                 cv2.imshow("Ligne de Production", frame)
                 if cv2.waitKey(1) & 0xFF == ord('q'): break
 
+                dt = time.time() - debut_cycle
                 if dt < 0.033: time.sleep(0.033 - dt)
 
         except Exception as e:

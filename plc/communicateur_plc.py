@@ -11,7 +11,6 @@ class CommunicateurPLC:
         self.client = Client(url=self.url)
         self.connecte = False
 
-        # Node IDs — verify namespace with UaExpert if needed
         self.NODE_BOUTEILLE = 'ns=3;s="presence_bouteille"'  # Bool  %I0.0
         self.NODE_NIVEAU    = 'ns=3;s="niveau_liquide"'  # Real  %MD4
 
