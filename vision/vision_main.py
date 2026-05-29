@@ -30,6 +30,10 @@ class VisionMain:
     def run(self):
         if not self.est_tournant: return
 
+        from shared_state import state
+        import asyncio
+        
+
         try:
             while self.est_tournant:
                 debut_cycle = time.time()
@@ -43,11 +47,11 @@ class VisionMain:
 
                 frame_cropped = frame[:, self.crop_x_start:self.crop_x_end]
                 
-                cv2.rectangle(frame, (self.crop_x_start, 0), (self.crop_x_end, frame.shape[0]), (255, 0, 255), 1)
+                cv2.rectangle(frame, (self.crop_x_start, 0), (self.crop_x_end, frame.shape[0]), (255, 0, 255), 2)
 
                 res_bouteille = self.detecteur_bouteille.detecter(frame_cropped, self.config)
 
-                MIN_CONFIDENT_AREA = getattr(self.config, 'surface_min_bouteille', 20000)
+                MIN_CONFIDENT_AREA = getattr(self.config, 'surface_min_bouteille', 10000) 
                 if res_bouteille['present'] and res_bouteille['aire'] < MIN_CONFIDENT_AREA:
                     res_bouteille = {'present': False, 'centre': None, 'bbox': None, 'aire': 0}                
                 
@@ -66,17 +70,34 @@ class VisionMain:
 
                 if not res_bouteille['present']:
                     status = "AUCUNE_BOUTEILLE"
+                    final_level = 0.0
+                    final_present = False
                 elif res_niveau.get('debordement'):
                     status = "DEBORDEMENT"
+                    final_level = res_niveau['pourcentage']
+                    final_present = True
                 elif res_niveau.get('plein'):
                     status = "BOUTEILLE_PLEINE"
+                    final_level = res_niveau['pourcentage']
+                    final_present = True
                 else:
                     status = "EN_REMPLISSAGE"
+                    final_level = res_niveau['pourcentage']
+                    final_present = True
+
+                fps_val = 1.0 / max(time.time() - debut_cycle, 0.001)
+                state.update(
+                    present=final_present,
+                    level=final_level,
+                    frame=frame,
+                    fps=fps_val,
+                    status=status
+                )
 
                 log_msg = "{} | Centre: {} | Niveau: {:.1f}% | BBox: {} | Aire: {}".format(
                     status, 
                     res_bouteille['centre'] if res_bouteille['centre'] else "N/A",
-                    res_niveau['pourcentage'],
+                    final_level,
                     res_bouteille['bbox'] if res_bouteille['bbox'] else "N/A",
                     int(res_bouteille['aire'])
                 )                
@@ -86,15 +107,13 @@ class VisionMain:
 
                 if res_bouteille['present']:
                     x, y, w, h = res_bouteille['bbox']
-                    
                     cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
                     cv2.putText(frame, status, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
                     
-                    niveau_pct = res_niveau['pourcentage'] / 100.0
+                    niveau_pct = final_level / 100.0
                     liq_h = int(h * niveau_pct)
                     rx, ry = x + 5, y + h - liq_h
                     rw, rh = w - 10, liq_h
-                    
                     if rh > 0:
                         cv2.rectangle(frame, (rx, ry), (rx + rw, ry + rh), (0, 0, 255), -1)
 
@@ -105,10 +124,11 @@ class VisionMain:
                 if dt < 0.033: time.sleep(0.033 - dt)
 
         except Exception as e:
-            print("Erreur : {}".format(e))
+            print("Erreur Critique Vision: {}".format(e))
+            import traceback
+            traceback.print_exc()
         finally:
             self.arreter()
-
     def arreter(self):
         self.est_tournant = False
         self.camera.release()
