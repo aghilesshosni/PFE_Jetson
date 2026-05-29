@@ -1,3 +1,4 @@
-from .app import CreationAPP
+
+from .app import app
 
 __all__=['CreationAPP']

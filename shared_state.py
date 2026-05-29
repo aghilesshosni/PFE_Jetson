@@ -1,34 +1,54 @@
+# -*- coding: utf-8 -*-
 import threading
 import cv2
-import numpy as np
+import time
 
 class SharedState:
     def __init__(self):
-        self.lock=threading.Lock()
-        self.presence_bouteille=False
-        self.pourcentage_niveau= 0.0
-        self.fps= 0.0
-        self.last_frame_bytes=None
+        self._lock = threading.Lock()
+        self._present = False
+        self._level = 0.0
+        self._frame = None
+        self._fps = 0.0
+        self._status = "AUCUNE_BOUTEILLE"
+        self._timestamp = time.time()
 
-    def update(self, present, niveau, frame, fps):
-        '''main.py appele cette methode pour mettre à jour les data'''
-        while self.lock:
-            self.presence_bouteille= present
-            self.pourcentage_niveau= niveau
-            self.fps=fps
-            #encodage de frame à format jpeg
+    def update(self, present, level, frame, fps, status=None):
+        with self._lock:
+            self._present = present
+            self._level = level
+            self._fps = fps
+            self._timestamp = time.time()
+
+            # Encode frame to JPEG for MJPEG streaming
             if frame is not None:
-                _, buffer= cv2.imencode('.jpeg',frame,[int(cv2.IMWRITE_JPEG_QUALITY),70])
-                self.last_frame_bytes= buffer.tobytes()
+                _, buffer = cv2.imencode('.jpg', frame, 
+                    [cv2.IMWRITE_JPEG_QUALITY, 80])
+                self._frame = buffer.tobytes()
+            else:
+                self._frame = None
+
+            # Auto-generate status if not provided
+            if status:
+                self._status = status
+            else:
+                if not present:
+                    self._status = "AUCUNE_BOUTEILLE"
+                elif level >= 90.0:
+                    self._status = "BOUTEILLE_PLEINE"
+                else:
+                    self._status = "EN_REMPLISSAGE"
 
     def get_data(self):
-        '''web_dashboard appelle cette methode pour retouver les data et les afficher'''
-        with self.lock:
-            return{
-                'present':self.presence_bouteille,
-                'niveau':self.pourcentage_niveau
-                'fps':self.fps
-                'frame':self.last_frame_bytes
+        with self._lock:
+            return {
+                'presence_bouteille': self._present,
+                'pourcentage_niveau': round(self._level, 1),
+                'frame': self._frame,
+                'fps': round(self._fps, 1),
+                'status': self._status,
+                'timestamp': self._timestamp,
+            }
 
-#Instance_Globale
-state= SharedSate()
+# Global shared instance
+state = SharedState()

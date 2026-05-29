@@ -13,8 +13,9 @@ class CommunicateurPLC:
         self.client = Client(url=self.url)
         self.connecte = False
 
-        self.NODE_BOUTEILLE = 'ns=4;i=3'
-        self.NODE_NIVEAU    = 'ns=4;i=4'
+        self.NODE_BOUTEILLE = 'ns=3;s="DB_Vision"."presence_bouteille"'
+        self.NODE_NIVEAU    = 'ns=3;s="DB_Vision"."niveau_liquide"'
+
     async def connecter(self):
         try:
             await self.client.connect()
@@ -31,7 +32,6 @@ class CommunicateurPLC:
             node_b = self.client.get_node(self.NODE_BOUTEILLE)
             node_n = self.client.get_node(self.NODE_NIVEAU)
 
-            # Utilisation de write_value avec typage explicite (évite BadWriteNotSupported)
             await node_b.write_value(DataValue(Variant(bool(bouteille_presente), VariantType.Boolean)))
             await node_n.write_value(DataValue(Variant(float(niveau_pct), VariantType.Float)))
 
@@ -48,23 +48,42 @@ class CommunicateurPLC:
 
 
 async def test_standalone():
+    """Envoie des valeurs simulées au PLC en temps réel via le tunnel SSH"""
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
     plc = CommunicateurPLC(ip="192.168.0.20", port=4840)
     await plc.connecter()
 
     if not plc.connecte:
-        print("Impossible de se connecter au PLC.")
+        print("Impossible de se connecter au PLC. Verifiez l'IP locale et PLCSim.")
         return
 
-    print("Connexion OK — envoi de TRUE en continu...")
+    print("Connexion OK — envoi de valeurs simulees...")
+    print("Ctrl+C pour arreter\n")
+
+    niveau = 0.0
+    bouteille = True
+
     try:
         while True:
-            await plc.envoyer(True, 50.0)
-            print("Envoye -> bouteille=True | niveau=50.0%")
+            if bouteille:
+                niveau = min(niveau + 1.5, 100.0)
+                if niveau >= 100.0:
+                    print("Bouteille pleine — simulation retrait bouteille")
+                    bouteille = False
+                    niveau = 0.0
+            else:
+                await asyncio.sleep(3)
+                bouteille = True
+                print("Nouvelle bouteille — reprise remplissage")
+
+            await plc.envoyer(bouteille, niveau)
+            print("bouteille={} | niveau={:.1f}%\n".format(bouteille, niveau))
             await asyncio.sleep(0.5)
+
     except KeyboardInterrupt:
-        print("\nArret")
+        print("\nArret demande par l'utilisateur")
     finally:
         await plc.deconnecter()
 
@@ -73,3 +92,4 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.run_until_complete(test_standalone())
     loop.close()
+
