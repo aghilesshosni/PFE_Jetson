@@ -7,7 +7,7 @@ camera:
 calibration:
   enabled: false  
   
-  area_min: 20000
+  area_min: 5000
   area_max: 30000
 
   width_min: 90
@@ -21,7 +21,7 @@ calibration:
   top_edge_y_max: 80 
 
 detection:
-  surface_min_bouteille: 1000 
+  surface_min_bouteille: 5000 
   noyau_flou: 5
   seuil_liquide: 40
 

@@ -48,7 +48,6 @@ class VisionMain:
                 frame_cropped = frame[:, self.crop_x_start:self.crop_x_end]
                 
                 cv2.rectangle(frame, (self.crop_x_start, 0), (self.crop_x_end, frame.shape[0]), (255, 0, 255), 2)
-
                 res_bouteille = self.detecteur_bouteille.detecter(frame_cropped, self.config)
 
                 MIN_CONFIDENT_AREA = getattr(self.config, 'surface_min_bouteille', 10000) 
@@ -63,7 +62,8 @@ class VisionMain:
                     old_x, old_y, old_w, old_h = res_bouteille['bbox']
                     new_x = old_x + self.crop_x_start
                     res_bouteille['bbox'] = (new_x, old_y, old_w, old_h)
-                
+
+
                 res_niveau = {'pourcentage': 0.0, 'plein': False, 'debordement': False}
                 if res_bouteille['present']:
                     res_niveau = self.detecteur_niveau.verifier(frame, res_bouteille['bbox'], self.config)

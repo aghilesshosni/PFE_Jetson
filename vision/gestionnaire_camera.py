@@ -9,8 +9,8 @@ class GestionnaireCamera:
 
         self.capture_width = 1920
         self.capture_height = 1080
-        self.display_width = 1280   
-        self.display_height = 720
+        self.display_width = 640   
+        self.display_height = 480
         self.framerate = 30
         self.flip_method = 0       
 
@@ -32,6 +32,7 @@ class GestionnaireCamera:
                 self.display_height,
             )
         )
+
 
     def open(self):
         print("Initialisation camera (Methode Directe JetsonHacks)...")

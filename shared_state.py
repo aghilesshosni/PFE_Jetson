@@ -20,15 +20,14 @@ class SharedState:
             self._fps = fps
             self._timestamp = time.time()
 
-            # Encode frame to JPEG for MJPEG streaming
-            if frame is not None:
-                _, buffer = cv2.imencode('.jpg', frame, 
-                    [cv2.IMWRITE_JPEG_QUALITY, 80])
-                self._frame = buffer.tobytes()
-            else:
-                self._frame = None
 
-            # Auto-generate status if not provided
+        if frame is not None:
+            small = cv2.resize(frame, (320, 240))
+            _, buffer = cv2.imencode('.jpg', small,
+                [cv2.IMWRITE_JPEG_QUALITY, 30])
+            self._frame = buffer.tobytes()
+        else:
+            self._frame = None
             if status:
                 self._status = status
             else:
@@ -44,11 +43,10 @@ class SharedState:
             return {
                 'presence_bouteille': self._present,
                 'pourcentage_niveau': round(self._level, 1),
-                'frame': self._frame,
+                'last_frame_bytes': self._frame,  
                 'fps': round(self._fps, 1),
                 'status': self._status,
                 'timestamp': self._timestamp,
             }
 
-# Global shared instance
 state = SharedState()
