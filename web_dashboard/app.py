@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import logging
 import threading
 from flask import Flask, render_template, Response, jsonify
 
@@ -8,9 +9,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared_state import state
 
 app = Flask(__name__)
-
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
 def generer_frames():
-    """MJPEG streaming — throttled, non-blocking"""
+    """MJPEG streaming"""
     while True:
         try:
             data = state.get_data()
@@ -19,7 +20,7 @@ def generer_frames():
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n'
                        + frame_bytes + b'\r\n')
-            time.sleep(0.1)  # hard cap at 10fps
+            time.sleep(0.1) 
         except GeneratorExit:
             break
         except Exception:
@@ -39,7 +40,7 @@ def video_feed():
             'Cache-Control': 'no-cache, no-store, must-revalidate',
             'Pragma': 'no-cache',
             'Expires': '0',
-            'Connection': 'close',   # ← key: don't keep connection alive forever
+            'Connection': 'close',  
         }
     )
 
@@ -47,25 +48,23 @@ def video_feed():
 def get_status():
     data = state.get_data()
     return jsonify({
-        'niveau':    data['pourcentage_niveau'],
-        'level':     data['pourcentage_niveau'],
-        'presence':  data['presence_bouteille'],
-        'present':   data['presence_bouteille'],
-        'fps':       data['fps'],
-        'status':    data['status'],
-        'timestamp': data['timestamp'],
+        'niveau':data['pourcentage_niveau'],
+        'level':data['pourcentage_niveau'],
+        'presence':data['presence_bouteille'],
+        'present':data['presence_bouteille'],
+        'fps':data['fps'],
+        'status':data['status'],
+        'timestamp':data['timestamp'],
     })
 
 def start_dashboard_thread():
     def run_flask():
-        # threaded=True lets Flask handle video + API simultaneously
-        # without one blocking the other
         app.run(
             host='0.0.0.0',
             port=5000,
             debug=False,
             use_reloader=False,
-            threaded=True      # ← critical for MJPEG + API to coexist
+            threaded=True    
         )
     flask_thread = threading.Thread(target=run_flask, daemon=True)
     flask_thread.start()

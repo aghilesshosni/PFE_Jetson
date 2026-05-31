@@ -8,7 +8,7 @@ class DetecteurNiveau:
         self._historique = []
         self._taille_historique = 12
         self._frames_sans_liquide = 0
-        self._seuil_absence = 8  # need 8 consecutive empty frames to report 0
+        self._seuil_absence = 8  
 
     def verifier(self, frame, bbox_bouteille, config):
         x, y, w, h = bbox_bouteille
@@ -18,13 +18,10 @@ class DetecteurNiveau:
         if y + h > frame.shape[0] or x + w > frame.shape[1]:
             return self._vide()
 
-        # ── ROI margins ───────────────────────────────────────────────────────
         margin_x = int(w * 0.18)
 
-        # If bbox starts at y=0 (snapped to top), use fixed pixel margin
-        # instead of percentage to avoid eating too much of the bottle
         if y < 10:
-            margin_top = 30  # fixed 30px for neck when bbox is full-frame
+            margin_top = 30  
         else:
             margin_top = int(h * 0.15)
 
@@ -39,10 +36,8 @@ class DetecteurNiveau:
         roi   = frame[ry1:ry2, rx1:rx2]
         roi_h = ry2 - ry1
 
-        # ── HSV color mask for pink/magenta liquid ────────────────────────────
         hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
 
-        # Widen the ranges to catch dim/dark pink under poor lighting
         mask1 = cv2.inRange(hsv,
             np.array([0,   35, 30]),
             np.array([20, 255, 255]))
@@ -56,28 +51,23 @@ class DetecteurNiveau:
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
         liquid_mask = cv2.morphologyEx(liquid_mask, cv2.MORPH_OPEN,  kernel, iterations=2)
         liquid_mask = cv2.morphologyEx(liquid_mask, cv2.MORPH_CLOSE, kernel, iterations=4)
-        # ── Check liquid presence ─────────────────────────────────────────────
         liquid_pixels = cv2.countNonZero(liquid_mask)
         min_pixels = int(roi_h * (rx2 - rx1) * 0.015)
 
         if liquid_pixels < min_pixels:
             self._frames_sans_liquide += 1
             if self._frames_sans_liquide >= self._seuil_absence:
-                # Only reset after N consecutive empty frames
                 self._historique.clear()
                 self._frames_sans_liquide = 0
                 return self._vide()
             else:
-                # Hold last known value during brief detection gaps
                 return self._build(
                     self._historique[-1] if self._historique else 0.0,
                     config
                 )
 
-        # Liquid detected — reset absence counter
         self._frames_sans_liquide = 0
 
-        # ── Find topmost liquid row ───────────────────────────────────────────
         surface_y = None
         for row in range(roi_h):
             if np.any(liquid_mask[row, :] > 0):

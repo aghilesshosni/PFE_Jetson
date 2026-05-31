@@ -2,6 +2,7 @@
 import cv2
 import numpy as np
 
+
 class DetecteurBouteille:
     def __init__(self):
         pass
@@ -21,14 +22,7 @@ class DetecteurBouteille:
             return {'present': False, 'centre': None, 'bbox': None, 'aire': 0}
 
         h_frame, w_frame = frame.shape[:2]
-        total_area = h_frame * w_frame
-        MAX_BOTTLE_AREA = total_area * 0.90
-
-        use_calibration = False
-        calib = {}
-        if hasattr(config, 'calibration') and config.calibration.get('enabled', False):
-            use_calibration = True
-            calib = config.calibration
+        MAX_BOTTLE_AREA = h_frame * w_frame * 0.90
 
         candidates = []
         for cnt in contours:
@@ -44,20 +38,6 @@ class DetecteurBouteille:
             if not (1.3 <= ratio <= 6.0):
                 continue
 
-            if use_calibration:
-                centre_x = x + (w // 2)
-                top_edge_y = y
-                if not (calib.get('area_min', 0) <= aire <= calib.get('area_max', 999999)):
-                    continue
-                if not (calib.get('width_min', 0) <= w <= calib.get('width_max', 999999)):
-                    continue
-                if not (calib.get('height_min', 0) <= h <= calib.get('height_max', 999999)):
-                    continue
-                if not (calib.get('center_x_min', 0) <= centre_x <= calib.get('center_x_max', 999999)):
-                    continue
-                if top_edge_y > calib.get('top_edge_y_max', 999999):
-                    continue
-
             candidates.append((cnt, aire, x, y, w, h, ratio))
 
         if not candidates:
@@ -68,20 +48,12 @@ class DetecteurBouteille:
         aire = best[1]
         x, y, w, h = best[2], best[3], best[4], best[5]
 
-        # ── Extend bbox bottom when bottle base merges with dark background ──
-        # If the detected bottom is within 15% of frame height from the bottom,
-        # the bottle is sitting on the conveyor — extend down to frame bottom.
         bottom_edge = y + h
-        gap_to_frame_bottom = h_frame - bottom_edge
-        
-        if gap_to_frame_bottom < int(h_frame * 0.15):
-            # Bottle is sitting on the surface — snap bottom to frame bottom
+        if (h_frame - bottom_edge) < int(h_frame * 0.15):
             h = h_frame - y
-        
-        # ── Also extend slightly upward if top seems cut (optional) ──────────
-        # If top is very close to frame top, the neck might be clipped too
+
         if y < int(h_frame * 0.05):
-            h = h + y  # extend upward
+            h = h + y
             y = 0
 
         centre_x = x + (w // 2)

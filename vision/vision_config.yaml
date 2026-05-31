@@ -4,36 +4,15 @@ camera:
   height: 480
   fps: 30
 
-calibration:
-  enabled: false  
-  
-  area_min: 5000
-  area_max: 30000
-
-  width_min: 90
-  width_max: 150
-  height_min: 400
-  height_max: 500
-
-  center_x_min: 30
-  center_x_max: 130
-  
-  top_edge_y_max: 80 
-
 detection:
-  surface_min_bouteille: 5000 
-  noyau_flou: 5
-  seuil_liquide: 40
+  surface_min_bouteille: 10000
 
-positionnement:
-  buse_x: 640     
-  tolerence: 40  
+vision:
+  crop_x_start: 250
+  crop_x_end: 450
 
 remplissage:
   seuil_plein_pourcentage: 90
-  ip_adress: "192.168.1.10"
-  port: 4840
-  seuil_liquide: 40
 
 plc:
   ip_adress: "192.168.1.10"
