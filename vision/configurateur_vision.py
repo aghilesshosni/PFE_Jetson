@@ -22,15 +22,15 @@ class ConfigurateurVision:
                 raise ValueError("Le fichier YAML est vide")
 
             self.id_camera = donnees['camera']['id']
-            self.largeur   = donnees['camera']['width']
-            self.hauteur   = donnees['camera']['height']
+            self.largeur = donnees['camera']['width']
+            self.hauteur = donnees['camera']['height']
 
             self.surface_min_bouteille = donnees.get('detection', {}).get('surface_min_bouteille', 10000)
-            self.seuil_plein           = donnees.get('remplissage', {}).get('seuil_plein_pourcentage', 90.0)
+            self.seuil_plein  = donnees.get('remplissage', {}).get('seuil_plein_pourcentage', 90.0)
 
             vision = donnees.get('vision', {})
             self.crop_x_start = vision.get('crop_x_start', 250)
-            self.crop_x_end   = vision.get('crop_x_end',   450)
+            self.crop_x_end = vision.get('crop_x_end',   450)
 
         except Exception as e:
             print("Erreur Configuration: {}".format(e))

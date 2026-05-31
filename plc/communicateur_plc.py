@@ -31,7 +31,6 @@ class CommunicateurPLC:
             node_b = self.client.get_node(self.NODE_BOUTEILLE)
             node_n = self.client.get_node(self.NODE_NIVEAU)
 
-            # Utilisation de write_value avec typage explicite (évite BadWriteNotSupported)
             await node_b.write_value(DataValue(Variant(bool(bouteille_presente), VariantType.Boolean)))
             await node_n.write_value(DataValue(Variant(float(niveau_pct), VariantType.Float)))
 

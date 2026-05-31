@@ -6,12 +6,12 @@ import time
 
 class SharedState:
     def __init__(self):
-        self._lock      = threading.Lock()
-        self._present   = False
-        self._level     = 0.0
-        self._frame     = None
-        self._fps       = 0.0
-        self._status    = "AUCUNE_BOUTEILLE"
+        self._lock = threading.Lock()
+        self._present = False
+        self._level = 0.0
+        self._frame = None
+        self._fps = 0.0
+        self._status = "AUCUNE_BOUTEILLE"
         self._timestamp = time.time()
 
     def update(self, present, level, frame, fps, status):
@@ -23,11 +23,11 @@ class SharedState:
             frame_bytes = None
 
         with self._lock:
-            self._present   = present
-            self._level     = level
-            self._fps       = fps
-            self._status    = status
-            self._frame     = frame_bytes
+            self._present = present
+            self._level = level
+            self._fps = fps
+            self._status = status
+            self._frame = frame_bytes
             self._timestamp = time.time()
 
     def get_data(self):
@@ -35,10 +35,10 @@ class SharedState:
             return {
                 'presence_bouteille': self._present,
                 'pourcentage_niveau': round(self._level, 1),
-                'last_frame_bytes':   self._frame,
-                'fps':                round(self._fps, 1),
-                'status':             self._status,
-                'timestamp':          self._timestamp,
+                'last_frame_bytes': self._frame,
+                'fps': round(self._fps, 1),
+                'status': self._status,
+                'timestamp': self._timestamp,
             }
 
 
