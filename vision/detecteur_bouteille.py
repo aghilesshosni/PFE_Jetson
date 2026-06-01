@@ -12,12 +12,15 @@ class DetecteurBouteille:
         blurred = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
         _, thresholded = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
+        edges = cv2.Canny(blurred, 30, 100)
+        kernel_e = np.ones((5, 5), np.uint8)
+        edges_dilated = cv2.dilate(edges, kernel_e, iterations=2)
         kernel = np.ones((7, 7), np.uint8)
         closed_edges = cv2.morphologyEx(thresholded, cv2.MORPH_CLOSE, kernel)
         opened_edges = cv2.morphologyEx(closed_edges, cv2.MORPH_OPEN, kernel)
 
-        contours, _ = cv2.findContours(opened_edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
+        combined = cv2.bitwise_or(opened_edges, edges_dilated)
+        contours, _ = cv2.findContours(combined, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         if len(contours) == 0:
             return {'present': False, 'centre': None, 'bbox': None, 'aire': 0}
 
@@ -35,7 +38,7 @@ class DetecteurBouteille:
                 continue
 
             ratio = float(h) / float(w) if w > 0 else 0
-            if not (1.3 <= ratio <= 6.0):
+            if not (3 <= ratio <= 5.2):
                 continue
 
             candidates.append((cnt, aire, x, y, w, h, ratio))
