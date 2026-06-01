@@ -5,11 +5,11 @@ camera:
   fps: 30
 
 detection:
-  surface_min_bouteille: 10000
+  surface_min_bouteille: 8000
 
 vision:
-  crop_x_start: 250
-  crop_x_end: 450
+  crop_x_start: 200
+  crop_x_end: 500
 
 remplissage:
   seuil_plein_pourcentage: 90

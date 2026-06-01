@@ -8,63 +8,62 @@ class DetecteurBouteille:
         pass
 
     def detecter(self, frame, config):
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
-        _, thresholded = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        # Etape 1 : Conversion + CLAHE
+        gray     = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        clahe    = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        enhanced = clahe.apply(gray)
 
-        edges = cv2.Canny(blurred, 30, 100)
-        kernel_e = np.ones((5, 5), np.uint8)
-        edges_dilated = cv2.dilate(edges, kernel_e, iterations=2)
-        kernel = np.ones((7, 7), np.uint8)
-        closed_edges = cv2.morphologyEx(thresholded, cv2.MORPH_CLOSE, kernel)
-        opened_edges = cv2.morphologyEx(closed_edges, cv2.MORPH_OPEN, kernel)
+        # Etape 2 : Filtre gaussien
+        blurred = cv2.GaussianBlur(enhanced, (5, 5), 0)
 
-        combined = cv2.bitwise_or(opened_edges, edges_dilated)
-        contours, _ = cv2.findContours(combined, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        if len(contours) == 0:
-            return {'present': False, 'centre': None, 'bbox': None, 'aire': 0}
+        # Etape 3 : Canny
+        edges = cv2.Canny(blurred, 20, 60)
 
-        h_frame, w_frame = frame.shape[:2]
-        MAX_BOTTLE_AREA = h_frame * w_frame * 0.90
+        # Etape 4 : Morphologie
+        kernel  = np.ones((5, 5), np.uint8)
+        dilated = cv2.dilate(edges,  kernel, iterations=3)
+        eroded  = cv2.erode(dilated, kernel, iterations=2)
 
+        # Etape 5 : Extraction contours
+        contours, _ = cv2.findContours(
+            eroded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        if not contours:
+            return {'present': False, 'centre': None,
+                    'bbox': None, 'aire': 0}
+
+        # Etape 6 : Filtrage geometrique
         candidates = []
         for cnt in contours:
             aire = cv2.contourArea(cnt)
             x, y, w, h = cv2.boundingRect(cnt)
 
-            if aire < 1000 or w < 30 or h < 50:
-                continue
-            if aire > MAX_BOTTLE_AREA:
+            if aire < 300 or w < 20 or h < 40:
                 continue
 
             ratio = float(h) / float(w) if w > 0 else 0
-            if not (3 <= ratio <= 5.2):
+            if not (3 <= ratio <= 5.5):
                 continue
 
-            candidates.append((cnt, aire, x, y, w, h, ratio))
+            candidates.append((cnt, aire, x, y, w, h))
 
         if not candidates:
-            return {'present': False, 'centre': None, 'bbox': None, 'aire': 0}
+            return {'present': False, 'centre': None,
+                    'bbox': None, 'aire': 0}
 
+        # Etape 7 : Meilleur candidat
         candidates.sort(key=lambda k: k[1], reverse=True)
-        best = candidates[0]
-        aire = best[1]
-        x, y, w, h = best[2], best[3], best[4], best[5]
+        _, aire, x, y, w, h = candidates[0]
 
-        bottom_edge = y + h
-        if (h_frame - bottom_edge) < int(h_frame * 0.15):
-            h = h_frame - y
-
-        if y < int(h_frame * 0.05):
-            h = h + y
-            y = 0
-
-        centre_x = x + (w // 2)
-        centre_y = y + (h // 2)
+        # Filtre confiance
+        surface_min = getattr(config, 'surface_min_bouteille', 10000)
+        if aire < surface_min:
+            return {'present': False, 'centre': None,
+                    'bbox': None, 'aire': 0}
 
         return {
             'present': True,
-            'centre': (centre_x, centre_y),
-            'bbox': (x, y, w, h),
-            'aire': aire
+            'centre' : (x + w // 2, y + h // 2),
+            'bbox'   : (x, y, w, h),
+            'aire'   : aire
         }
