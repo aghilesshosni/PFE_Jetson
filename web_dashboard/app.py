@@ -11,15 +11,11 @@ from shared_state import state
 app = Flask(__name__)
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 def generer_frames():
-    """MJPEG streaming"""
     while True:
         try:
             data = state.get_data()
             frame_bytes = data['last_frame_bytes']
-            if frame_bytes:
-                yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n'
-                       + frame_bytes + b'\r\n')
+            if frame_bytes: yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n'+ frame_bytes + b'\r\n')
             time.sleep(0.1) 
         except GeneratorExit:
             break
@@ -59,12 +55,6 @@ def get_status():
 
 def start_dashboard_thread():
     def run_flask():
-        app.run(
-            host='0.0.0.0',
-            port=5000,
-            debug=False,
-            use_reloader=False,
-            threaded=True    
-        )
+        app.run(host='0.0.0.0',port=5000,debug=False,use_reloader=False,threaded=True)
     flask_thread = threading.Thread(target=run_flask, daemon=True)
     flask_thread.start()

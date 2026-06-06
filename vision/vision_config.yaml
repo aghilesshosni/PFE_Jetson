@@ -12,7 +12,7 @@ vision:
   crop_x_end: 500
 
 remplissage:
-  seuil_plein_pourcentage: 90
+  seuil_plein_pourcentage: 95
 
 plc:
   ip_adress: "192.168.1.10"

@@ -26,7 +26,7 @@ class ConfigurateurVision:
             self.hauteur = donnees['camera']['height']
 
             self.surface_min_bouteille = donnees.get('detection', {}).get('surface_min_bouteille', 10000)
-            self.seuil_plein  = donnees.get('remplissage', {}).get('seuil_plein_pourcentage', 90.0)
+            self.seuil_plein  = donnees.get('remplissage', {}).get('seuil_plein_pourcentage', 95.0)
 
             vision = donnees.get('vision', {})
             self.crop_x_start = vision.get('crop_x_start', 250)
